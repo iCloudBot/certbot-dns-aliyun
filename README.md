@@ -12,6 +12,12 @@ pip install certbot-dns-aliyun
 
 ---
 
+Let's Encrypt (ACME) 协议做 DNS-01 验证生成证书的大致流程：「**1.Certbot 生成验证值** → **2.添加到 DNS _acme-challenge 子域 TXT 记录** → **3.等待 DNS 生效** → **4.Let's Encrypt 解析并验证** → **5.验证通过并颁发证书** → **6.删除 TXT记录**」
+
+手动模式（manual），支持不删除TXT记录进行证书更新，同时也支持更新并删除TXT记录；certbot-dns-aliyun插件不支持保留TXT记录。
+
+---
+
 容器镜像 `cleverest/certbot-dns-aliyun` ，支持`linux/amd64` `linux/arm64` 架构操作系统；
 
 首次申请证书后，每天的凌晨 12 点容器会自动执行证书续期检测任务；
@@ -42,13 +48,14 @@ docker exec -it certbot sh
 
 [官网manual介绍](https://eff-certbot.readthedocs.io/en/latest/using.html#manual)
 
-只需要更改 `-d` `-m` 后面的值即可，在命令后加上 `--dry-run` 可运行测试，不会生成实际证书。
+更改 `-d` `-m` 后面的值生成您所需证书，事例生成证书后不会删除TXT记录，若您需要删除，加上 `--manual-cleanup-hook "alidns clean"` 参数值即可。
+
+加上 `--dry-run` 参数可运行测试，不会生成实际证书。
 
 ```bash
 certbot certonly -d www.example.com -m admin@example.com \
   --manual --preferred-challenges dns \
   --manual-auth-hook "alidns" \
-  --manual-cleanup-hook "alidns clean" \
   --agree-tos \
   --no-eff-email
 ```
@@ -67,7 +74,7 @@ certbot certonly --cert-name example.com -d example.com,www.example.com,api.exam
 
 2. Certbot 插件
 
-[官网dns-plugins介绍](https://eff-certbot.readthedocs.io/en/latest/using.html#dns-plugins)，指定的工作模式不一样外，其他与“手工模式”使用方法一致。
+[官网dns-plugins介绍](https://eff-certbot.readthedocs.io/en/latest/using.html#dns-plugins)，指定的工作模式不一样外，参数与“手工模式”使用方法一致，生成证书后不会保留TXT记录。
 
 ```bash
 # 进入容器
